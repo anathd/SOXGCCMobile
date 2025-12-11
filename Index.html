@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>SOX GCC Delivery Dashboard</title>
+  <style>
+    :root {
+      --lowes-blue: #004990;
+      --lowes-white: #FFFFFF;
+      --lowes-light-blue: #15b6e5;
+      --lowes-gray: #f5f7fa;
+      --lowes-dark-blue: #002f60;
+      --radius-base: 12px;
+      --font-family: "Segoe UI", "Inter", Arial, sans-serif;
+      --font-size-base: 15px;
+      --shadow-sm: 0 2px 8px rgba(0, 73, 144, 0.08);
+      --shadow-md: 0 4px 16px rgba(0, 73, 144, 0.12);
+      --shadow-lg: 0 8px 32px rgba(0, 73, 144, 0.16);
+      --safe-area-top: env(safe-area-inset-top, 0px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: var(--font-family);
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      color: var(--lowes-blue);
+      font-size: var(--font-size-base);
+      overflow-x: hidden;
+    }
+    
+    /* Mobile Header - Fixed */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, var(--lowes-blue) 0%, var(--lowes-dark-blue) 100%);
+      padding: calc(12px + var(--safe-area-top)) 16px 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo {
+      width: 70px;
+      height: 32px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    }
+    
+    .dashboard-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--lowes-white);
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header-btn {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85em;
+      font-weight: 600;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .header-btn:active {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(0.95);
+    }
+    
+    .header-btn .btn-text {
+      display: none;
+    }
+    
+    #excelFileInput {
+      display: none;
+    }
+    
+    /* Main Container */
+    .container {
+      padding: calc(130px + var(--safe-area-top)) 12px calc(70px + var(--safe-area-bottom)) 12px;
+      max-width: 100%;
+    }
+    
+    /* Summary Cards - Horizontal Scroll */
+    .summary-scroll-container {
+      margin: 0 -12px 16px;
+      padding: 0 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    
+    .summary-scroll-container::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .summary-boxes {
+      display: flex;
+      gap: 12px;
+      padding: 4px 0;
+      width: max-content;
+    }
+    
+    .summary-box {
+      background: linear-gradient(135deg, var(--lowes-white) 0%, #f8fbff 100%);
+      border-radius: var(--radius-base);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-top: 4px solid var(--lowes-blue);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      min-width: 120px;
+      flex-shrink: 0;
+    }
+    
+    .summary-box.completed {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border-top: 4px solid #4caf50;
+      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.25);
+    }
+    
+    .summary-box.completed .summary-value {
+      color: #2e7d32;
+    }
+    
+    .summary-box.in-progress {
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-top: 4px solid #ff9800;
+      box-shadow: 0 4px 16px rgba(255, 152, 0, 0.25);
+    }
+    
+    .summary-box.in-progress .summary-value {
+      color: #e65100;
+    }
+    
+    .summary-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--lowes-blue);
+      line-height: 1;
+    }
+    
+    .summary-label {
+      font-size: 0.75rem;
+      color: var(--lowes-dark-blue);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--lowes-white);
+      box-shadow: 0 -4px 20px rgba(0, 73, 144, 0.15);
+      display: flex;
+      padding: 8px 8px calc(8px + var(--safe-area-bottom));
+      z-index: 100;
+    }
+    
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      border: none;
+      color: #666;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+    
+    .nav-item.active {
+      color: var(--lowes-blue);
+      background: rgba(0, 73, 144, 0.08);
+    }
+    
+    .nav-item:active {
+      transform: scale(0.95);
+    }
+    
+    .nav-icon {
+      font-size: 1.4rem;
+    }
+    
+    /* Section Views */
+    .section-view {
+      display: none;
+    }
+    
+    .section-view.active {
+      display: block;
+    }
+    
+    /* Section Header */
+    .section-header {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--lowes-blue);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    /* Filter Section */
+    .filter-toggle {
+      background: var(--lowes-white);
+      border-radius: var(--radius-base);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      border-bottom: 3px solid var(--lowes-light-blue);
+    }
+    
+    .filter-toggle-text {
+      font-weight: 600;
+      color: var(--lowes-dark-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .filter-toggle-icon {
+      transition: transform 0.3s;
+      font-size: 1.2rem;
+    }
+    
+    .filter-toggle.expanded .filter-toggle-icon {
+      transform: rotate(180deg);
+    }
+    
+    .filters-panel {
+      background: var(--lowes-white);
+      border-radius: var(--radius-base);
+      padding: 0;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    
+    .filters-panel.expanded {
+      max-height: 500px;
+      padding: 16px;
+    }
+    
+    .filter-group {
+      margin-bottom: 16px;
+    }
+    
+    .filter-group:last-child {
+      margin-bottom: 0;
+    }
+    
+    .filter-group label {
+      display: block;
+      font-size: 0.8em;
+      color: var(--lowes-dark-blue);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    select, input[type="date"], input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 2px solid #e0e7ef;
+      background: var(--lowes-white);
+      color: var(--lowes-dark-blue);
+      font-size: 16px; /* Prevents zoom on iOS */
+      transition: all 0.3s;
+      font-family: var(--font-family);
+    }
+    
+    select:focus, input[type="date"]:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: var(--lowes-light-blue);
+      box-shadow: 0 0 0 3px rgba(21, 182, 229, 0.1);
+    }
+    
+    /* Controls List - Mobile Card Style */
+    .controls-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .control-card {
+      background: var(--lowes-white);
+      border-radius: var(--radius-base);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--lowes-blue);
+      transition: all 0.2s;
+    }
+    
+    .control-card:active {
+      transform: scale(0.98);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .control-card.delayed {
+      border-left-color: #c62828;
+      background: linear-gradient(135deg, #fff 0%, #fff5f5 100%);
+    }
+    
+    .control-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .control-name {
+      font-weight: 700;
+      color: var(--lowes-blue);
+      font-size: 0.95rem;
+      line-height: 1.3;
+      flex: 1;
+      padding-right: 12px;
+    }
+    
+    .control-type-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    
+    .control-type-badge.reliance {
+      background: linear-gradient(135deg, var(--lowes-blue) 0%, var(--lowes-dark-blue) 100%);
+      color: white;
+    }
+    
+    .control-type-badge.independent {
+      background: linear-gradient(135deg, var(--lowes-light-blue) 0%, #0d9bc7 100%);
+      color: white;
+    }
+    
+    .control-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+    }
+    
+    .control-date {
+      color: var(--lowes-dark-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .control-date.delayed {
+      color: #c62828;
+      font-weight: 700;
+    }
+    
+    .progress-bar-wrapper {
+      background: #e8eef5;
+      border-radius: 10px;
+      height: 32px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+    }
+    
+    .progress-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(90deg, var(--lowes-blue) 0%, var(--lowes-light-blue) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+      animation: progress-shine 2s infinite;
+    }
+    
+    @keyframes progress-shine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .progress-text {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 700;
+      font-size: 0.85em;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    .control-card-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+    
+    .edit-btn {
+      background: linear-gradient(135deg, var(--lowes-light-blue) 0%, #0d9bc7 100%);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9em;
+      font-weight: 600;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(21, 182, 229, 0.3);
+    }
+    
+    .edit-btn:active {
+      background: linear-gradient(135deg, var(--lowes-blue) 0%, var(--lowes-dark-blue) 100%);
+      transform: scale(0.95);
+    }
+    
+    /* Analytics Section */
+    .analytics-toggle {
+      display: flex;
+      background: #e8eef5;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 16px;
+    }
+    
+    .analytics-toggle button {
+      flex: 1;
+      padding: 10px 12px;
+      border: none;
+      background: transparent;
+      color: var(--lowes-dark-blue);
+      font-weight: 600;
+      font-size: 0.85em;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+    
+    .analytics-toggle button.active {
+      background: var(--lowes-blue);
+      color: white;
+      box-shadow: 0 2px 8px rgba(0, 73, 144, 0.3);
+    }
+    
+    .analytics-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .analytics-card {
+      background: var(--lowes-white);
+      border-radius: var(--radius-base);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      border-top: 3px solid var(--lowes-blue);
+    }
+    
+    .analytics-card-title {
+      font-size: 0.8rem;
+      color: var(--lowes-dark-blue);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    
+    .donut-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    
+    .donut-chart {
+      position: relative;
+      width: 100px;
+      height: 100px;
+    }
+    
+    .donut-chart svg {
+      transform: rotate(-90deg);
+    }
+    
+    .donut-chart circle {
+      fill: none;
+      stroke-width: 10;
+    }
+    
+    .donut-bg {
+      stroke: #e8eef5;
+    }
+    
+    .donut-progress {
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s ease;
+    }
+    
+    .donut-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    
+    .donut-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--lowes-blue);
+      line-height: 1;
+    }
+    
+    .donut-label {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 2px;
+    }
+    
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .timeline-chart {
+      height: 200px;
+      position: relative;
+    }
+    
+    .timeline-svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .timeline-grid-line {
+      stroke: #e8eef5;
+      stroke-width: 1;
+    }
+    
+    .timeline-axis-label {
+      font-size: 9px;
+      fill: #666;
+    }
+    
+    .timeline-line {
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .timeline-dot {
+      transition: r 0.2s;
+    }
+    
+    .timeline-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+    }
+    
+    .timeline-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .timeline-legend-line {
+      width: 20px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    
+    /* Observations Section */
+    .observations-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .observation-item {
+      padding: 16px;
+      background: linear-gradient(135deg, #f8fbff 0%, #eef4fb 100%);
+      border-radius: var(--radius-base);
+      border-left: 4px solid var(--lowes-light-blue);
+      transition: all 0.3s ease;
+    }
+    
+    .observation-control {
+      font-weight: 700;
+      color: var(--lowes-blue);
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .observation-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(135deg, var(--lowes-blue) 0%, var(--lowes-dark-blue) 100%);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .observation-tag::before {
+      content: '💡';
+      font-size: 0.7rem;
+    }
+    
+    .observation-text {
+      color: var(--lowes-dark-blue);
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    
+    .no-observations {
+      color: #666;
+      font-style: italic;
+      text-align: center;
+      padding: 30px;
+      background: #f8fbff;
+      border-radius: 8px;
+    }
+    
+    /* Milestones Section */
+    .milestones-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .milestone-card {
+      background: linear-gradient(135deg, var(--lowes-white) 0%, #f8fbff 100%);
+      border-radius: var(--radius-base);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-left: 4px solid var(--lowes-blue);
+    }
+    
+    .milestone-label {
+      font-size: 0.75rem;
+      color: var(--lowes-dark-blue);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .milestone-date {
+      font-size: 0.95rem;
+      color: var(--lowes-blue);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    
+    /* Edit Panel - Mobile Fullscreen */
+    #editPanel {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      z-index: 1000;
+      padding: calc(16px + var(--safe-area-top)) 16px calc(16px + var(--safe-area-bottom));
+      overflow-y: auto;
+    }
+    
+    #editPanel h3 {
+      margin: 0 0 24px;
+      color: var(--lowes-blue);
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    #editPanel .close-edit {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #666;
+      cursor: pointer;
+      padding: 4px;
+    }
+    
+    #editPanel .input-group {
+      margin-bottom: 20px;
+    }
+    
+    #editPanel label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9em;
+      color: var(--lowes-dark-blue);
+    }
+    
+    #editPanel input,
+    #editPanel select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e7ef;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    
+    #editPanel .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 32px;
+    }
+    
+    #editPanel button {
+      padding: 16px 24px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1em;
+      transition: all 0.3s;
+    }
+    
+    #editPanel .cancel-btn {
+      background: #e0e7ef;
+      color: var(--lowes-dark-blue);
+      order: 2;
+    }
+    
+    #editPanel .cancel-btn:active {
+      background: #d0d7df;
+    }
+    
+    #editPanel .save-btn {
+      background: linear-gradient(135deg, var(--lowes-blue) 0%, var(--lowes-dark-blue) 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 73, 144, 0.3);
+      order: 1;
+    }
+    
+    #editPanel .save-btn:active {
+      transform: scale(0.98);
+    }
+    
+    #editOverlay {
+      display: none;
+    }
+    
+    /* Save Notification */
+    .save-notification {
+      position: fixed;
+      bottom: calc(80px + var(--safe-area-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4);
+      font-weight: 600;
+      font-size: 0.9rem;
+      z-index: 10000;
+      display: none;
+      animation: slideUp 0.3s ease-out;
+      white-space: nowrap;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    /* Sort controls */
+    .sort-control {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    
+    .sort-btn {
+      background: var(--lowes-white);
+      border: 2px solid #e0e7ef;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--lowes-dark-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    
+    .sort-btn:active {
+      background: #f0f4f8;
+    }
+    
+    .sort-btn.active {
+      border-color: var(--lowes-blue);
+      color: var(--lowes-blue);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+    
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+    
+    /* Pull to refresh indicator */
+    .pull-indicator {
+      text-align: center;
+      padding: 12px;
+      color: var(--lowes-blue);
+      font-size: 0.85rem;
+      display: none;
+    }
+  </style>
+  <!-- SheetJS library for Excel read/write -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <div class="header-content">
+        <img src="https://www.lowescdn.com/images/logos/lowes_logo_white.png" alt="Lowe's Logo" class="logo">
+        <span class="dashboard-title">SOX Dashboard</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="document.getElementById('excelFileInput').click()" title="Load Excel">
+          📂<span class="btn-text">Load</span>
+        </button>
+        <button class="header-btn" onclick="downloadExcel()" title="Save Excel">
+          💾<span class="btn-text">Save</span>
+        </button>
+      </div>
+    </div>
+    <input type="file" id="excelFileInput" accept=".xlsx,.xls" onchange="handleExcelFileSelect(event)" />
+  </header>
+  
+  <div class="container">
+    <!-- Summary Cards - Horizontal Scroll -->
+    <div class="summary-scroll-container">
+      <section class="summary-boxes" id="summaryBoxes"></section>
+    </div>
+
+    <!-- Controls View -->
+    <div class="section-view active" id="controlsView">
+      <!-- Filter Toggle -->
+      <div class="filter-toggle" onclick="toggleFilters()">
+        <span class="filter-toggle-text">🔍 Filters</span>
+        <span class="filter-toggle-icon">▼</span>
+      </div>
+      
+      <!-- Collapsible Filters -->
+      <form id="filters" class="filters-panel" autocomplete="off">
+        <div class="filter-group">
+          <label for="nameFilter">Control Name</label>
+          <input type="text" id="nameFilter" placeholder="Search control name..." />
+        </div>
+        <div class="filter-group">
+          <label for="controlTypeFilter">Control Type</label>
+          <select id="controlTypeFilter" name="controlType">
+            <option value="All">All Types</option>
+            <option value="Reliance">Reliance</option>
+            <option value="Independent">Independent</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="dateFilter">Completion Date Before</label>
+          <input type="date" id="dateFilter" name="dateFilter" />
+        </div>
+        <div class="filter-group">
+          <label for="progressFilter">Completion ≥</label>
+          <select id="progressFilter">
+            <option value="0">0%</option>
+            <option value="0.25">25%</option>
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1">100%</option>
+          </select>
+        </div>
+      </form>
+      
+      <!-- Sort Control -->
+      <div class="sort-control">
+        <button class="sort-btn" id="sortBtn" onclick="sortByProgress()">
+          <span>Progress</span>
+          <span id="sortIcon">↕️</span>
+        </button>
+      </div>
+      
+      <!-- Controls List -->
+      <div class="controls-list" id="controlsList"></div>
+    </div>
+
+    <!-- Analytics View -->
+    <div class="section-view" id="analyticsView">
+      <div class="section-header">📊 Analytics</div>
+      <div class="analytics-toggle">
+        <button class="active" onclick="setAnalyticsView('all')">All</button>
+        <button onclick="setAnalyticsView('reliance')">Reliance</button>
+        <button onclick="setAnalyticsView('independent')">Independent</button>
+      </div>
+      <div class="analytics-cards">
+        <div class="analytics-card">
+          <div class="analytics-card-title">Reliance Controls</div>
+          <div class="donut-container" id="relianceDonut"></div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-card-title">Independent Controls</div>
+          <div class="donut-container" id="independentDonut"></div>
+        </div>
+        <div class="analytics-card">
+          <div class="analytics-card-title">Delivery Timeline</div>
+          <div class="timeline-chart" id="timelineChart"></div>
+          <div class="timeline-legend">
+            <div class="timeline-legend-item">
+              <div class="timeline-legend-line" style="background: var(--lowes-blue);"></div>
+              <span>Expected</span>
+            </div>
+            <div class="timeline-legend-item">
+              <div class="timeline-legend-line" style="background: #4caf50;"></div>
+              <span>Actual</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observations View -->
+    <div class="section-view" id="observationsView">
+      <div class="section-header">💡 Process Improvements</div>
+      <div class="observations-container" id="observationsContainer"></div>
+    </div>
+
+    <!-- Milestones View -->
+    <div class="section-view" id="milestonesView">
+      <div class="section-header">🎯 Milestones</div>
+      <div class="milestones-container" id="milestonesSection"></div>
+    </div>
+  </div>
+  
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-view="controlsView" onclick="switchView('controlsView')">
+      <span class="nav-icon">📋</span>
+      <span>Controls</span>
+    </button>
+    <button class="nav-item" data-view="analyticsView" onclick="switchView('analyticsView')">
+      <span class="nav-icon">📊</span>
+      <span>Analytics</span>
+    </button>
+    <button class="nav-item" data-view="observationsView" onclick="switchView('observationsView')">
+      <span class="nav-icon">💡</span>
+      <span>Process</span>
+    </button>
+    <button class="nav-item" data-view="milestonesView" onclick="switchView('milestonesView')">
+      <span class="nav-icon">🎯</span>
+      <span>Milestones</span>
+    </button>
+  </nav>
+  
+  <!-- Edit Panel - Mobile Fullscreen -->
+  <div id="editPanel">
+    <h3>
+      <button class="close-edit" onclick="closeEditPanel()">✕</button>
+      Edit Control
+    </h3>
+    <input type="hidden" id="editIndex" />
+    <div class="input-group">
+      <label>Control Name</label>
+      <input type="text" id="editName" />
+    </div>
+    <div class="input-group">
+      <label>Type</label>
+      <select id="editType">
+        <option value="Reliance">Reliance</option>
+        <option value="Independent">Independent</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>Completion Date</label>
+      <input type="date" id="editDate" />
+    </div>
+    <div class="input-group">
+      <label>Progress (%)</label>
+      <input type="number" id="editProgress" min="0" max="100" />
+    </div>
+    <div class="button-group">
+      <button type="button" class="save-btn" onclick="saveEdit()">Save Changes</button>
+      <button type="button" class="cancel-btn" onclick="closeEditPanel()">Cancel</button>
+    </div>
+  </div>
+  <div id="editOverlay" onclick="closeEditPanel()"></div>
+  
+  <div id="saveNotification" class="save-notification">
+    ✓ Saved!
+  </div>
+
+  <script>
+    // Default controls data
+    const defaultControls = [
+      {name:"AC7.2 Emergency ID Provisioning",type:"Reliance",date:"2025-11-21",progress:1.0},
+      {name:"AC9.1 - User Provisioning",type:"Reliance",date:"2026-01-28",progress:0.3},
+      {name:"AC9.4 - Employee Transfers",type:"Independent",date:"2025-11-28",progress:1.0},
+      {name:"AC11.1 - Terminations Standard Automated Process",type:"Reliance",date:"2025-12-12",progress:0.0},
+      {name:"AC11.3 - Inactive User Account Maintenance",type:"Reliance",date:"2025-12-05",progress:1.0},
+      {name:"AC11.4 - IT Contractor Terminations",type:"Reliance",date:"2025-12-12",progress:0.7},
+      {name:"AC16.5 - Review of Access for Direct Changes to SOX Distributed Databases",type:"Independent",date:"2026-01-09",progress:0.7},
+      {name:"AC16.7 - CVS SOD Review",type:"Independent",date:"2025-12-19",progress:1.0},
+      {name:"AC19.1 - Elevated Access",type:"Independent",date:"2026-01-09",progress:0.85},
+      {name:"AC20.4 - Review of Access for Direct Changes to SOX Distributed Databases",type:"Independent",date:"2026-01-09",progress:0.85},
+      {name:"AC19.5 - Elevated Access - Validation of Elevated Access Scope for Certifications",type:"Reliance",date:"2025-12-26",progress:0.0},
+      {name:"CM12.2 - SOX Application Password Configuration Settings",type:"Reliance",date:"2026-01-28",progress:1.0},
+      {name:"CM16.5 - Bitbucket Pull Request Master Configuration Enabled",type:"Reliance",date:"2026-01-16",progress:0.0},
+      {name:"CC 1.6 - Application Change Review Workday",type:"Reliance",date:"2025-12-19",progress:1.0},
+      {name:"CC 1.6 - Application Change Review LX",type:"Reliance",date:"2025-12-26",progress:0.0},
+      {name:"CC 1.3 - Change Management",type:"Independent",date:"2026-01-28",progress:0.0},
+      {name:"CC 06.6 - DBA Direct Data Changes Made to Teradata and DB2 for zOS Are Reviewed",type:"Independent",date:"2025-12-12",progress:1.0},
+      {name:"CO 5.2 - Production Infrastructure Storage, Database Backup and Restoration",type:"Reliance",date:"2025-11-28",progress:1.0},
+      {name:"CO2.1 - Production Mainframe Job Monitoring",type:"Reliance",date:"2025-12-19",progress:1.0},
+      {name:"CO02.4 ERP to FDI alert mechanism",type:"Independent",date:"2026-01-09",progress:0.0},
+      {name:"CO2.3 - Production Job Monitoring - Distributed",type:"Independent",date:"2026-01-16",progress:0.3},
+      {name:"CO02.5 - Sail Point Batch Monitoring",type:"Reliance",date:"2025-12-26",progress:0.0},
+      {name:"MC 1.5 - Security Incident Event Management Review",type:"Reliance",date:"2025-12-19",progress:0.0},
+      {name:"SD01.1 - System Development - Project Selection ",type:"Independent",date:"2025-12-12",progress:1.0},
+      {name:"SD01.2 - System Development - Stage Gates",type:"Independent",date:"2026-01-16",progress:0.0},
+      {name:"MC20.2 - Review of Controls",type:"Independent",date:"2025-11-21",progress:1.0}
+    ];
+    
+    // Load controls from localStorage or use default
+    let controls = loadControls();
+    let sortOrder = null; // null, 'asc', 'desc'
+    
+    // ==================== OBSERVATIONS DATA ====================
+    const defaultObservations = [
+      {
+        control: "CO5.2 Backup monitoring",
+        observation: "MongoDB – EventStore (21 TB Dataset): Daily cron job was disabled due to excessive runtime (2–3 days) causing overlaps. Interim: Backup frequency changed to every 72 hours. Long-term: Dataset being split into smaller volumes post-BFCM to reschedule daily backup runs."
+      }
+    ];
+    
+    let observations = loadObservations();
+    
+    function loadObservations() {
+      const saved = localStorage.getItem('soxObservations');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading saved observations, using defaults');
+          return [...defaultObservations];
+        }
+      }
+      return [...defaultObservations];
+    }
+    
+    function saveObservations() {
+      try {
+        localStorage.setItem('soxObservations', JSON.stringify(observations));
+      } catch (e) {
+        console.error('Error saving observations:', e);
+      }
+    }
+    
+    function renderObservations() {
+      const container = document.getElementById('observationsContainer');
+      
+      if (observations.length === 0) {
+        container.innerHTML = '<div class="no-observations">No process improvements recorded.</div>';
+        return;
+      }
+      
+      container.innerHTML = observations.map((obs, index) => `
+        <div class="observation-item">
+          <div class="observation-control">
+            <span class="observation-tag">Improvement</span>
+            ${obs.control}
+          </div>
+          <div class="observation-text">${obs.observation}</div>
+        </div>
+      `).join('');
+    }
+    // ==================== END OBSERVATIONS DATA ====================
+    
+    function loadControls() {
+      const saved = localStorage.getItem('soxControls');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading saved data, using defaults');
+          return [...defaultControls];
+        }
+      }
+      return [...defaultControls];
+    }
+    
+    function saveControls() {
+      try {
+        localStorage.setItem('soxControls', JSON.stringify(controls));
+        showSaveNotification();
+        console.log('✓ Changes saved successfully');
+      } catch (e) {
+        console.error('Error saving data:', e);
+        alert('Error saving data. Please try again.');
+      }
+    }
+    
+    function showSaveNotification() {
+      const notification = document.getElementById('saveNotification');
+      notification.style.display = 'block';
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 2000);
+    }
+    
+    function percent(num) { return Math.round(num * 100) + "%"; }
+
+    function renderSummary() {
+      const total = controls.length;
+      const completed = controls.filter(c => c.progress === 1).length;
+      const inProgress = controls.filter(c => c.progress > 0 && c.progress < 1).length;
+      const reliance = controls.filter(c => c.type === "Reliance").length;
+      const independent = controls.filter(c => c.type === "Independent").length;
+      
+      const section = document.getElementById("summaryBoxes");
+      section.innerHTML = `
+        <div class="summary-box">
+          <div class="summary-value">${total}</div>
+          <div class="summary-label">Total</div>
+        </div>
+        <div class="summary-box completed">
+          <div class="summary-value">${completed}</div>
+          <div class="summary-label">Completed</div>
+        </div>
+        <div class="summary-box in-progress">
+          <div class="summary-value">${inProgress}</div>
+          <div class="summary-label">In Progress</div>
+        </div>
+        <div class="summary-box">
+          <div class="summary-value">${reliance}</div>
+          <div class="summary-label">Reliance</div>
+        </div>
+        <div class="summary-box">
+          <div class="summary-value">${independent}</div>
+          <div class="summary-label">Independent</div>
+        </div>
+      `;
+    }
+
+    function getFilteredControls() {
+      const nameVal = document.getElementById('nameFilter').value.toLowerCase();
+      const typeVal = document.getElementById('controlTypeFilter').value;
+      const dateVal = document.getElementById('dateFilter').value;
+      const progressVal = parseFloat(document.getElementById('progressFilter').value);
+
+      let filtered = controls.filter(c => {
+        let nameMatch = (!nameVal || c.name.toLowerCase().includes(nameVal));
+        let typeMatch = (typeVal === "All" || c.type === typeVal);
+        let dateMatch = (!dateVal || c.date <= dateVal);
+        let progMatch = (typeof c.progress === "number" ? c.progress >= progressVal : true);
+        return nameMatch && typeMatch && dateMatch && progMatch;
+      });
+      
+      // Apply sorting if active
+      if (sortOrder === 'asc') {
+        filtered.sort((a, b) => a.progress - b.progress);
+      } else if (sortOrder === 'desc') {
+        filtered.sort((a, b) => b.progress - a.progress);
+      }
+      
+      return filtered;
+    }
+    
+    function sortByProgress() {
+      if (sortOrder === null) {
+        sortOrder = 'desc';
+      } else if (sortOrder === 'desc') {
+        sortOrder = 'asc';
+      } else {
+        sortOrder = null;
+      }
+      
+      updateSortIcon();
+      renderControlsList();
+    }
+    
+    function updateSortIcon() {
+      const btn = document.getElementById('sortBtn');
+      const icon = document.getElementById('sortIcon');
+      
+      if (sortOrder === 'asc') {
+        icon.textContent = '↑';
+        btn.classList.add('active');
+      } else if (sortOrder === 'desc') {
+        icon.textContent = '↓';
+        btn.classList.add('active');
+      } else {
+        icon.textContent = '↕️';
+        btn.classList.remove('active');
+      }
+    }
+
+    function renderControlsList() {
+      const data = getFilteredControls();
+      const container = document.getElementById("controlsList");
+      const today = new Date().toISOString().split('T')[0];
+      
+      if (data.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔍</div>
+            <p>No controls match your filters</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = data.map((c, idx) => {
+        const isDelayed = c.date < today && c.progress < 1;
+        const progressPercent = Math.round(c.progress * 100);
+        const progressColor = c.progress === 1 ? '#4caf50' : (progressPercent > 50 ? '#004990' : '#666');
+        const originalIndex = controls.indexOf(c);
+        
+        return `
+          <div class="control-card ${isDelayed ? 'delayed' : ''}">
+            <div class="control-card-header">
+              <div class="control-name">${c.name}</div>
+              <span class="control-type-badge ${c.type.toLowerCase()}">${c.type}</span>
+            </div>
+            <div class="control-meta">
+              <div class="control-date ${isDelayed ? 'delayed' : ''}">
+                📅 ${c.date} ${isDelayed ? '⚠️ Delayed' : ''}
+              </div>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" style="width:${Math.max(5, progressPercent)}%;"></div>
+              <span class="progress-text" style="color:${progressColor};">${percent(c.progress)}</span>
+            </div>
+            <div class="control-card-footer">
+              <button class="edit-btn" onclick="openEditPanel(${originalIndex})">Edit</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMilestones() {
+      const completed = controls.filter(c => c.progress === 1);
+      const today = new Date().toISOString().split('T')[0];
+      const fourteenDaysLater = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const upcoming = controls.filter(c => c.date >= today && c.date <= fourteenDaysLater && c.progress < 1)
+                               .sort((a,b) => a.date.localeCompare(b.date));
+      const maxIncomplete = [...controls].filter(c=>c.progress<1).sort((a,b) => b.progress-a.progress)[0];
+      const section = document.getElementById("milestonesSection");
+      section.innerHTML = '';
+      
+      // Upcoming first (most relevant for mobile)
+      if (upcoming.length) {
+        upcoming.forEach(c => {
+          const card = document.createElement('div');
+          card.className = 'milestone-card';
+          card.style.borderLeftColor = '#ff9800';
+          card.innerHTML = `
+            <span class="milestone-label">⚠️ Upcoming - Due Soon</span>
+            <div class="milestone-date">${c.name}</div>
+            <span style="color:#004990; font-size:0.9em;">📅 ${c.date}</span>
+            <span style="color:#ff9800; font-weight:700;">${percent(c.progress)} complete</span>
+          `;
+          section.appendChild(card);
+        });
+      }
+      
+      if (maxIncomplete) {
+        const card = document.createElement('div');
+        card.className = 'milestone-card';
+        card.style.borderLeftColor = 'var(--lowes-light-blue)';
+        card.innerHTML = `
+          <span class="milestone-label">🚀 Highest Progress</span>
+          <div class="milestone-date">${maxIncomplete.name}</div>
+          <span style="color:#004990; font-size:0.9em;">📅 ${maxIncomplete.date}</span>
+          <span style="color:#004990; font-weight:700;">${percent(maxIncomplete.progress)}</span>
+        `;
+        section.appendChild(card);
+      }
+      
+      if (completed.length) {
+        completed.forEach(c=>{
+          const card = document.createElement('div');
+          card.className = 'milestone-card';
+          card.style.borderLeftColor = '#4caf50';
+          card.innerHTML = `
+            <span class="milestone-label">✅ Delivered</span>
+            <div class="milestone-date">${c.name}</div>
+            <span style="color:#004990; font-size:0.9em;">📅 ${c.date}</span>
+            <span style="color:#4caf50; font-weight:700;">Completed</span>
+          `;
+          section.appendChild(card);
+        });
+      }
+      
+      if (!upcoming.length && !completed.length && !maxIncomplete) {
+        section.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🎯</div>
+            <p>No milestones to display</p>
+          </div>
+        `;
+      }
+    }
+
+    // ==================== ANALYTICS FUNCTIONS ====================
+    let analyticsView = 'all';
+    
+    function setAnalyticsView(view) {
+      analyticsView = view;
+      document.querySelectorAll('.analytics-toggle button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.textContent.toLowerCase() === view || (view === 'all' && btn.textContent === 'All')) {
+          btn.classList.add('active');
+        }
+      });
+      renderAnalytics();
+    }
+    
+    function renderDonutChart(containerId, completed, total, color) {
+      const container = document.getElementById(containerId);
+      const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const circumference = 2 * Math.PI * 40;
+      const offset = circumference - (percentage / 100) * circumference;
+      
+      container.innerHTML = `
+        <div class="donut-chart">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle class="donut-bg" cx="50" cy="50" r="40"></circle>
+            <circle class="donut-progress" cx="50" cy="50" r="40" 
+              stroke="${color}" 
+              stroke-dasharray="${circumference}" 
+              stroke-dashoffset="${offset}"></circle>
+          </svg>
+          <div class="donut-center">
+            <div class="donut-value">${percentage}%</div>
+            <div class="donut-label">Complete</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background: ${color};"></div>
+            <span>Completed: ${completed}</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background: #e8eef5;"></div>
+            <span>Remaining: ${total - completed}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    function renderTimelineChart() {
+      const container = document.getElementById('timelineChart');
+      if (!container) return;
+      
+      const startDate = new Date('2025-11-21');
+      const endDate = new Date('2026-01-30');
+      
+      // Generate 7-day intervals
+      const intervals = [];
+      let current = new Date(startDate);
+      while (current <= endDate) {
+        intervals.push(new Date(current));
+        current.setDate(current.getDate() + 7);
+      }
+      if (intervals[intervals.length - 1] < endDate) {
+        intervals.push(new Date(endDate));
+      }
+      
+      // Filter controls based on view
+      let filteredControls = controls;
+      if (analyticsView === 'reliance') {
+        filteredControls = controls.filter(c => c.type === 'Reliance');
+      } else if (analyticsView === 'independent') {
+        filteredControls = controls.filter(c => c.type === 'Independent');
+      }
+      
+      // Calculate expected and actual for each interval
+      const expectedData = [];
+      const actualData = [];
+      
+      intervals.forEach(intervalDate => {
+        const dateStr = intervalDate.toISOString().split('T')[0];
+        const expected = filteredControls.filter(c => c.date <= dateStr).length;
+        expectedData.push(expected);
+        const actual = filteredControls.filter(c => c.progress === 1 && c.date <= dateStr).length;
+        actualData.push(actual);
+      });
+      
+      const maxValue = Math.max(...expectedData, ...actualData, 1);
+      const width = container.clientWidth || 300;
+      const height = 200;
+      const padding = { top: 20, right: 15, bottom: 40, left: 30 };
+      const chartWidth = width - padding.left - padding.right;
+      const chartHeight = height - padding.top - padding.bottom;
+      
+      // Generate points
+      const getX = (i) => padding.left + (i / (intervals.length - 1)) * chartWidth;
+      const getY = (val) => padding.top + chartHeight - (val / maxValue) * chartHeight;
+      
+      const expectedPoints = expectedData.map((val, i) => `${getX(i)},${getY(val)}`).join(' ');
+      const actualPoints = actualData.map((val, i) => `${getX(i)},${getY(val)}`).join(' ');
+      
+      // Generate grid lines
+      const gridLines = [];
+      const yTicks = 4;
+      for (let i = 0; i <= yTicks; i++) {
+        const y = padding.top + (i / yTicks) * chartHeight;
+        gridLines.push(`<line class="timeline-grid-line" x1="${padding.left}" y1="${y}" x2="${width - padding.right}" y2="${y}"></line>`);
+        const val = Math.round(maxValue - (i / yTicks) * maxValue);
+        gridLines.push(`<text class="timeline-axis-label" x="${padding.left - 5}" y="${y + 3}" text-anchor="end">${val}</text>`);
+      }
+      
+      // Generate x-axis labels (show fewer for mobile)
+      const xLabels = intervals.map((date, i) => {
+        if (i % 3 === 0 || i === intervals.length - 1) {
+          const label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          return `<text class="timeline-axis-label" x="${getX(i)}" y="${height - 10}" text-anchor="middle">${label}</text>`;
+        }
+        return '';
+      }).join('');
+      
+      // Generate dots
+      const expectedDots = expectedData.map((val, i) => 
+        `<circle class="timeline-dot" cx="${getX(i)}" cy="${getY(val)}" r="4" fill="#004990"></circle>`
+      ).join('');
+      
+      const actualDots = actualData.map((val, i) => 
+        `<circle class="timeline-dot" cx="${getX(i)}" cy="${getY(val)}" r="4" fill="#4caf50"></circle>`
+      ).join('');
+      
+      container.innerHTML = `
+        <svg class="timeline-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet">
+          ${gridLines.join('')}
+          ${xLabels}
+          <polyline class="timeline-line" points="${expectedPoints}" stroke="#004990"></polyline>
+          <polyline class="timeline-line" points="${actualPoints}" stroke="#4caf50"></polyline>
+          ${expectedDots}
+          ${actualDots}
+        </svg>
+      `;
+    }
+    
+    function renderAnalytics() {
+      // Reliance donut
+      const relianceControls = controls.filter(c => c.type === 'Reliance');
+      const relianceCompleted = relianceControls.filter(c => c.progress === 1).length;
+      renderDonutChart('relianceDonut', relianceCompleted, relianceControls.length, '#004990');
+      
+      // Independent donut
+      const independentControls = controls.filter(c => c.type === 'Independent');
+      const independentCompleted = independentControls.filter(c => c.progress === 1).length;
+      renderDonutChart('independentDonut', independentCompleted, independentControls.length, '#15b6e5');
+      
+      // Timeline chart
+      renderTimelineChart();
+    }
+    
+    // Resize handler for timeline chart
+    window.addEventListener('resize', () => {
+      renderTimelineChart();
+    });
+    // ==================== END ANALYTICS FUNCTIONS ====================
+    
+    // ==================== MOBILE NAVIGATION ====================
+    function switchView(viewId) {
+      // Update nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.view === viewId) {
+          item.classList.add('active');
+        }
+      });
+      
+      // Update views
+      document.querySelectorAll('.section-view').forEach(view => {
+        view.classList.remove('active');
+      });
+      document.getElementById(viewId).classList.add('active');
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Re-render analytics if switching to that view
+      if (viewId === 'analyticsView') {
+        setTimeout(renderAnalytics, 100);
+      }
+    }
+    
+    function toggleFilters() {
+      const toggle = document.querySelector('.filter-toggle');
+      const panel = document.querySelector('.filters-panel');
+      toggle.classList.toggle('expanded');
+      panel.classList.toggle('expanded');
+    }
+    // ==================== END MOBILE NAVIGATION ====================
+
+    document.getElementById("filters").addEventListener("input", ()=>{
+      renderControlsList();
+      renderMilestones();
+    });
+
+    renderSummary();
+    renderControlsList();
+    renderMilestones();
+    renderAnalytics();
+    renderObservations();
+    updateSortIcon();
+
+    window.updateControl = function(controlName, updates) {
+      const control = controls.find(c => c.name === controlName);
+      if (control) {
+        if (updates.date) control.date = updates.date;
+        if (updates.progress !== undefined) control.progress = updates.progress;
+        if (updates.type) control.type = updates.type;
+        saveControls();
+        renderSummary(); renderControlsList(); renderMilestones(); renderAnalytics();
+        console.log(`✓ Updated: ${controlName}`);
+      } else {
+        console.error(`✗ Control not found: ${controlName}`);
+      }
+    }
+    
+    window.updateControls = function(newControls){
+      controls.length = 0;
+      newControls.forEach(c=>controls.push(c));
+      saveControls();
+      renderSummary(); renderControlsList(); renderMilestones(); renderAnalytics();
+      console.log(`✓ Updated ${newControls.length} controls`);
+    }
+    
+    window.getControls = function() {
+      console.log(JSON.stringify(controls, null, 2));
+      return controls;
+    }
+    
+    window.resetToDefaults = function() {
+      if (confirm('Are you sure you want to reset all data to default values? This cannot be undone.')) {
+        controls.length = 0;
+        defaultControls.forEach(c => controls.push({...c}));
+        saveControls();
+        renderSummary(); renderControlsList(); renderMilestones(); renderAnalytics();
+        console.log('✓ Reset to default data');
+      }
+    }
+    
+    window.openEditPanel = function(index) {
+      const control = controls[index];
+      document.getElementById('editIndex').value = index;
+      document.getElementById('editName').value = control.name;
+      document.getElementById('editType').value = control.type;
+      document.getElementById('editDate').value = control.date;
+      document.getElementById('editProgress').value = Math.round(control.progress * 100);
+      document.getElementById('editPanel').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    window.closeEditPanel = function() {
+      document.getElementById('editPanel').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    
+    window.saveEdit = function() {
+      const index = parseInt(document.getElementById('editIndex').value);
+      controls[index].name = document.getElementById('editName').value;
+      controls[index].type = document.getElementById('editType').value;
+      controls[index].date = document.getElementById('editDate').value;
+      controls[index].progress = parseInt(document.getElementById('editProgress').value) / 100;
+      saveControls();
+      renderSummary();
+      renderControlsList();
+      renderMilestones();
+      renderAnalytics();
+      closeEditPanel();
+      console.log(`✓ Updated and saved: ${controls[index].name}`);
+    }
+    
+    // ==================== EXCEL FILE HANDLING ====================
+    const EXCEL_FILE_NAME = 'SOX_Dashboard.xlsx';
+    const SHEET_NAME = 'Controls';
+    
+    window.handleExcelFileSelect = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          
+          const sheet = workbook.Sheets[SHEET_NAME];
+          if (!sheet) {
+            alert('Sheet "' + SHEET_NAME + '" not found in Excel file. Please make sure the sheet is named "Controls".');
+            return;
+          }
+          
+          const jsonData = XLSX.utils.sheet_to_json(sheet, { raw: false, dateNF: 'yyyy-mm-dd' });
+          
+          controls.length = 0;
+          jsonData.forEach((row, index) => {
+            controls.push({
+              name: row['Control Name'] || '',
+              type: row['Type'] || 'Reliance',
+              date: parseExcelDate(row['Date']),
+              progress: parseFloat(row['Progress']) || 0
+            });
+          });
+          
+          // Load Observations sheet if it exists
+          const obsSheet = workbook.Sheets['Observations'];
+          if (obsSheet) {
+            const obsData = XLSX.utils.sheet_to_json(obsSheet, { raw: true });
+            observations.length = 0;
+            obsData.forEach(row => {
+              const control = row['Control Name'] || row['Control'] || '';
+              const observation = row['Potential Observation'] || row['Observation'] || '';
+              if (control && observation) {
+                observations.push({
+                  control: control,
+                  observation: observation
+                });
+              }
+            });
+            saveObservations();
+            console.log('✓ Loaded ' + observations.length + ' observations from Excel');
+          }
+          
+          saveControls();
+          renderSummary();
+          renderControlsList();
+          renderMilestones();
+          renderAnalytics();
+          renderObservations();
+          
+          console.log('✓ Loaded ' + controls.length + ' controls from Excel');
+          
+        } catch (error) {
+          console.error('Error reading Excel:', error);
+          alert('Error reading Excel file: ' + error.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+    
+    function parseExcelDate(dateValue) {
+      if (!dateValue) return '';
+      if (dateValue instanceof Date) {
+        return formatDateForExcel(dateValue);
+      }
+      if (typeof dateValue === 'string') {
+        const parsed = new Date(dateValue);
+        if (!isNaN(parsed.getTime())) {
+          return formatDateForExcel(parsed);
+        }
+        return dateValue;
+      }
+      if (typeof dateValue === 'number') {
+        const date = XLSX.SSF.parse_date_code(dateValue);
+        return date.y + '-' + String(date.m).padStart(2, '0') + '-' + String(date.d).padStart(2, '0');
+      }
+      return '';
+    }
+    
+    function formatDateForExcel(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return year + '-' + month + '-' + day;
+    }
+    
+    window.downloadExcel = function() {
+      if (controls.length === 0) {
+        alert('No data to save.');
+        return;
+      }
+      
+      try {
+        // Controls sheet
+        const wsData = [['Control Name', 'Type', 'Date', 'Progress']];
+        
+        controls.forEach(control => {
+          wsData.push([
+            control.name,
+            control.type,
+            control.date ? new Date(control.date) : '',
+            control.progress
+          ]);
+        });
+        
+        const newWorkbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+        
+        worksheet['!cols'] = [
+          { wch: 70 },
+          { wch: 15 },
+          { wch: 12 },
+          { wch: 10 }
+        ];
+        
+        XLSX.utils.book_append_sheet(newWorkbook, worksheet, SHEET_NAME);
+        
+        // Observations sheet
+        const obsData = [['Control Name', 'Potential Observation']];
+        observations.forEach(obs => {
+          obsData.push([obs.control, obs.observation]);
+        });
+        
+        const obsWorksheet = XLSX.utils.aoa_to_sheet(obsData);
+        obsWorksheet['!cols'] = [
+          { wch: 40 },
+          { wch: 120 }
+        ];
+        
+        XLSX.utils.book_append_sheet(newWorkbook, obsWorksheet, 'Observations');
+        
+        XLSX.writeFile(newWorkbook, EXCEL_FILE_NAME);
+        
+        console.log('✓ Excel file downloaded: ' + EXCEL_FILE_NAME);
+        
+      } catch (error) {
+        console.error('Error saving Excel:', error);
+        alert('Failed to save Excel file: ' + error.message);
+      }
+    }
+    
+    console.log("%c📱 SOX Dashboard - Mobile Version", "color: #004990; font-size: 16px; font-weight: bold;");
+    console.log("%c💾 All changes are automatically saved!", "color: #4caf50; font-weight: bold;");
+  </script>
+</body>
+</html>
