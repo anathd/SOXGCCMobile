@@ -734,78 +734,6 @@
       border-radius: 2px;
     }
     
-    /* Observations Section - Compact */
-    .observations-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .observation-item {
-      padding: 14px;
-      background: var(--lowes-white);
-      border-radius: 14px;
-      box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .observation-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--lowes-light-blue) 0%, #4dd0e1 100%);
-    }
-    
-    .observation-control {
-      font-weight: 700;
-      color: var(--lowes-blue);
-      font-size: 0.8rem;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    
-    .observation-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(0, 73, 144, 0.1);
-      color: var(--lowes-blue);
-      font-size: 0.6rem;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      flex-shrink: 0;
-    }
-    
-    .observation-tag::before {
-      content: '💡';
-      font-size: 0.65rem;
-    }
-    
-    .observation-text {
-      color: #555;
-      font-size: 0.78rem;
-      line-height: 1.5;
-    }
-    
-    .no-observations {
-      color: #666;
-      font-style: italic;
-      text-align: center;
-      padding: 30px;
-      background: #f8fbff;
-      border-radius: 14px;
-    }
-    
     /* Milestones Section - Compact Grid */
     .milestones-container {
       display: grid;
@@ -1092,7 +1020,7 @@
     <div class="header-top">
       <div class="header-content">
         <img src="https://www.lowescdn.com/images/logos/lowes_logo_white.png" alt="Lowe's Logo" class="logo">
-        <span class="dashboard-title">SOX GCC Delivery Dashboard</span>
+        <span class="dashboard-title">SOX Dashboard</span>
       </div>
       <div class="header-actions">
         <button class="header-btn" onclick="document.getElementById('excelFileInput').click()" title="Load Excel">
@@ -1198,12 +1126,6 @@
       </div>
     </div>
 
-    <!-- Observations View -->
-    <div class="section-view" id="observationsView">
-      <div class="section-header">💡 Process Improvements</div>
-      <div class="observations-container" id="observationsContainer"></div>
-    </div>
-
     <!-- Milestones View -->
     <div class="section-view" id="milestonesView">
       <div class="section-header">🎯 Milestones</div>
@@ -1220,10 +1142,6 @@
     <button class="nav-item" data-view="analyticsView" onclick="switchView('analyticsView')">
       <span class="nav-icon">📊</span>
       <span>Analytics</span>
-    </button>
-    <button class="nav-item" data-view="observationsView" onclick="switchView('observationsView')">
-      <span class="nav-icon">💡</span>
-      <span>Process</span>
     </button>
     <button class="nav-item" data-view="milestonesView" onclick="switchView('milestonesView')">
       <span class="nav-icon">🎯</span>
@@ -1274,85 +1192,35 @@
       {name:"AC7.2 Emergency ID Provisioning",type:"Reliance",date:"2025-11-21",progress:1.0},
       {name:"AC9.1 - User Provisioning",type:"Reliance",date:"2026-01-28",progress:0.3},
       {name:"AC9.4 - Employee Transfers",type:"Independent",date:"2025-11-28",progress:1.0},
-      {name:"AC11.1 - Terminations Standard Automated Process",type:"Reliance",date:"2025-12-19",progress:0.0},
+      {name:"AC11.1 - Terminations Standard Automated Process",type:"Reliance",date:"2025-12-12",progress:0.0},
       {name:"AC11.3 - Inactive User Account Maintenance",type:"Reliance",date:"2025-12-05",progress:1.0},
-      {name:"AC11.4 - IT Contractor Terminations",type:"Reliance",date:"2025-12-19",progress:0.7},
-      {name:"AC16.5 - Review of Access for Direct Changes to SOX Distributed Databases",type:"Independent",date:"2026-01-09",progress:0.85},
-      {name:"AC16.7 - CVS SOD Review",type:"Independent",date:"2025-12-12",progress:1.0},
+      {name:"AC11.4 - IT Contractor Terminations",type:"Reliance",date:"2025-12-12",progress:0.7},
+      {name:"AC16.5 - Review of Access for Direct Changes to SOX Distributed Databases",type:"Independent",date:"2026-01-09",progress:0.7},
+      {name:"AC16.7 - CVS SOD Review",type:"Independent",date:"2025-12-19",progress:1.0},
       {name:"AC19.1 - Elevated Access",type:"Independent",date:"2026-01-09",progress:0.85},
       {name:"AC20.4 - Review of Access for Direct Changes to SOX Distributed Databases",type:"Independent",date:"2026-01-09",progress:0.85},
       {name:"AC19.5 - Elevated Access - Validation of Elevated Access Scope for Certifications",type:"Reliance",date:"2025-12-26",progress:0.0},
-      {name:"CM12.2 - SOX Application Password Configuration Settings",type:"Reliance",date:"2026-12-12",progress:1.0},
+      {name:"CM12.2 - SOX Application Password Configuration Settings",type:"Reliance",date:"2026-01-28",progress:1.0},
       {name:"CM16.5 - Bitbucket Pull Request Master Configuration Enabled",type:"Reliance",date:"2026-01-16",progress:0.0},
-      {name:"CC 1.6 - Application Change Review Workday",type:"Reliance",date:"2025-12-12",progress:1.0},
+      {name:"CC 1.6 - Application Change Review Workday",type:"Reliance",date:"2025-12-19",progress:1.0},
       {name:"CC 1.6 - Application Change Review LX",type:"Reliance",date:"2025-12-26",progress:0.0},
       {name:"CC 1.3 - Change Management",type:"Independent",date:"2026-01-28",progress:0.0},
       {name:"CC 06.6 - DBA Direct Data Changes Made to Teradata and DB2 for zOS Are Reviewed",type:"Independent",date:"2025-12-12",progress:1.0},
       {name:"CO 5.2 - Production Infrastructure Storage, Database Backup and Restoration",type:"Reliance",date:"2025-11-28",progress:1.0},
-      {name:"CO2.1 - Production Mainframe Job Monitoring",type:"Reliance",date:"2025-12-12",progress:1.0},
+      {name:"CO2.1 - Production Mainframe Job Monitoring",type:"Reliance",date:"2025-12-19",progress:1.0},
       {name:"CO02.4 ERP to FDI alert mechanism",type:"Independent",date:"2026-01-09",progress:0.0},
-      {name:"CO2.3 - Production Job Monitoring - Distributed",type:"Independent",date:"2026-01-16",progress:0.5},
+      {name:"CO2.3 - Production Job Monitoring - Distributed",type:"Independent",date:"2026-01-16",progress:0.3},
       {name:"CO02.5 - Sail Point Batch Monitoring",type:"Reliance",date:"2025-12-26",progress:0.0},
       {name:"MC 1.5 - Security Incident Event Management Review",type:"Reliance",date:"2025-12-19",progress:0.0},
       {name:"SD01.1 - System Development - Project Selection ",type:"Independent",date:"2025-12-12",progress:1.0},
       {name:"SD01.2 - System Development - Stage Gates",type:"Independent",date:"2026-01-16",progress:0.0},
       {name:"MC20.2 - Review of Controls",type:"Independent",date:"2025-11-21",progress:1.0}
     ];
+
     
     // Load controls from localStorage or use default
     let controls = loadControls();
     let sortOrder = null; // null, 'asc', 'desc'
-    
-    // ==================== OBSERVATIONS DATA ====================
-    const defaultObservations = [
-      {
-        control: "CO5.2 Backup monitoring",
-        observation: "MongoDB – EventStore (21 TB Dataset): Daily cron job was disabled due to excessive runtime (2–3 days) causing overlaps. Interim: Backup frequency changed to every 72 hours. Long-term: Dataset being split into smaller volumes post-BFCM to reschedule daily backup runs."
-      }
-    ];
-    
-    let observations = loadObservations();
-    
-    function loadObservations() {
-      const saved = localStorage.getItem('soxObservations');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Error loading saved observations, using defaults');
-          return [...defaultObservations];
-        }
-      }
-      return [...defaultObservations];
-    }
-    
-    function saveObservations() {
-      try {
-        localStorage.setItem('soxObservations', JSON.stringify(observations));
-      } catch (e) {
-        console.error('Error saving observations:', e);
-      }
-    }
-    
-    function renderObservations() {
-      const container = document.getElementById('observationsContainer');
-      
-      if (observations.length === 0) {
-        container.innerHTML = '<div class="no-observations">No process improvements recorded.</div>';
-        return;
-      }
-      
-      container.innerHTML = observations.map((obs, index) => `
-        <div class="observation-item">
-          <div class="observation-control">
-            <span class="observation-tag">Improvement</span>
-            ${obs.control}
-          </div>
-          <div class="observation-text">${obs.observation}</div>
-        </div>
-      `).join('');
-    }
-    // ==================== END OBSERVATIONS DATA ====================
     
     function loadControls() {
       const saved = localStorage.getItem('soxControls');
@@ -1802,7 +1670,6 @@
     renderControlsList();
     renderMilestones();
     renderAnalytics();
-    renderObservations();
     updateSortIcon();
 
     window.updateControl = function(controlName, updates) {
@@ -1905,31 +1772,11 @@
             });
           });
           
-          // Load Observations sheet if it exists
-          const obsSheet = workbook.Sheets['Observations'];
-          if (obsSheet) {
-            const obsData = XLSX.utils.sheet_to_json(obsSheet, { raw: true });
-            observations.length = 0;
-            obsData.forEach(row => {
-              const control = row['Control Name'] || row['Control'] || '';
-              const observation = row['Potential Observation'] || row['Observation'] || '';
-              if (control && observation) {
-                observations.push({
-                  control: control,
-                  observation: observation
-                });
-              }
-            });
-            saveObservations();
-            console.log('✓ Loaded ' + observations.length + ' observations from Excel');
-          }
-          
           saveControls();
           renderSummary();
           renderControlsList();
           renderMilestones();
           renderAnalytics();
-          renderObservations();
           
           console.log('✓ Loaded ' + controls.length + ' controls from Excel');
           
@@ -1998,20 +1845,6 @@
         ];
         
         XLSX.utils.book_append_sheet(newWorkbook, worksheet, SHEET_NAME);
-        
-        // Observations sheet
-        const obsData = [['Control Name', 'Potential Observation']];
-        observations.forEach(obs => {
-          obsData.push([obs.control, obs.observation]);
-        });
-        
-        const obsWorksheet = XLSX.utils.aoa_to_sheet(obsData);
-        obsWorksheet['!cols'] = [
-          { wch: 40 },
-          { wch: 120 }
-        ];
-        
-        XLSX.utils.book_append_sheet(newWorkbook, obsWorksheet, 'Observations');
         
         XLSX.writeFile(newWorkbook, EXCEL_FILE_NAME);
         
